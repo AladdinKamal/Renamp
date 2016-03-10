@@ -26,7 +26,7 @@ namespace Renamp
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(@"-The default projects' directory is\n   'C:\Users\XXX\Documents\Visual Studio 2015\Projects\ '.\n-The new project's name can only contain letters, numbers, - and _. ", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("-This application changes any c# project's name.. including all  properties and namespace.\n\n" + "-The default projects' directory is\n" + @"   ' C:\Users\XXX\Documents\Visual Studio 2015\Projects\ '" + "\n-The new project's name can only contain letters, numbers, - and _. \n\n -Please close all directories before renaming.", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void textBox2_KeyPress(object sender, KeyPressEventArgs e)
@@ -47,6 +47,11 @@ namespace Renamp
             else if (textBox1.Text == textBox2.Text)
             {
                 MessageBox.Show("Please change new project name.");
+            }
+            else if (textBox2.Text.Contains(" "))
+            {
+                MessageBox.Show("New project name can't contain spaces, please try again.");
+
             }
 
             String newName = textBox2.Text;
@@ -110,63 +115,26 @@ namespace Renamp
                 DeleteDirectory(newPath + @"obj\");
 
             System.IO.File.Move(newPath + oldName1 + ".csproj", newPath + newName + ".csproj");
-
             fileEditor(newPath + newName + ".csproj", oldName1, newName, oldName2);
-            fileEditor(newPath + "Program.cs", oldName1, newName, oldName2);
-            fileEditor(newPath + "Form1.cs", oldName1, newName, oldName2);
-            fileEditor(newPath + "Form1.Designer.cs", oldName1, newName, oldName2);
 
-            if (File.Exists(newPath + "Form2.cs"))
+            String[] files = System.IO.Directory.GetFiles(newPath, "*.cs");
+            foreach (String c in files)
             {
-                fileEditor(newPath + "Form2.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form2.Designer.cs", oldName1, newName, oldName2);
+                fileEditor(c, oldName1, newName, oldName2);
             }
-            if (File.Exists(newPath + "Form3.cs"))
+            files = System.IO.Directory.GetFiles(newPath, "*.xaml");
+            foreach (String c in files)
             {
-                fileEditor(newPath + "Form3.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form3.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form4.cs"))
-            {
-                fileEditor(newPath + "Form4.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form4.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form5.cs"))
-            {
-                fileEditor(newPath + "Form5.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form5.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form6.cs"))
-            {
-                fileEditor(newPath + "Form6.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form6.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form7.cs"))
-            {
-                fileEditor(newPath + "Form7.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form7.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form8.cs"))
-            {
-                fileEditor(newPath + "Form8.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form8.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form9.cs"))
-            {
-                fileEditor(newPath + "Form9.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form9.Designer.cs", oldName1, newName, oldName2);
-            }
-            if (File.Exists(newPath + "Form10.cs"))
-            {
-                fileEditor(newPath + "Form10.cs", oldName1, newName, oldName2);
-                fileEditor(newPath + "Form10.Designer.cs", oldName1, newName, oldName2);
+                fileEditor(c, oldName1, newName, oldName2);
             }
 
             newPath = newPath + @"Properties\";
+            files = System.IO.Directory.GetFiles(newPath, "*.cs");
 
-            fileEditor(newPath + "AssemblyInfo.cs", oldName1, newName, oldName2);
-            fileEditor(newPath + "Resources.Designer.cs", oldName1, newName, oldName2);
-            fileEditor(newPath + "Settings.Designer.cs", oldName1, newName, oldName2);
+            foreach (String c in files)
+            {
+                fileEditor(c, oldName1, newName, oldName2);
+            }
 
             DialogResult result = MessageBox.Show("Project name has been successfully changed.\nDo you want to change another project name ?", "SUCCESS!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
             if (result == DialogResult.No)
