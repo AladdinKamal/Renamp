@@ -31,7 +31,7 @@ namespace Renamp
 
         private void textBox2_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!char.IsLetterOrDigit(e.KeyChar) && e.KeyChar != '_' && e.KeyChar != '-' && e.KeyChar != (char)8)
+            if (!char.IsLetterOrDigit(e.KeyChar) && e.KeyChar != '_' && e.KeyChar != '-' && e.KeyChar != (char)8 && e.KeyChar != 'V' && !ModifierKeys.HasFlag(Keys.Control))
             {
                 e.Handled = true;
             }
@@ -39,6 +39,8 @@ namespace Renamp
 
         private void button1_Click(object sender, EventArgs e)
         {
+
+            var regexItem = new Regex(@"~!@#$%^&*()+=/\""|,.?><");
             if (textBox1.Text.Trim() == "" || textBox2.Text.Trim() == "" || textBox3.Text.Trim() == "" && checkBox1.Checked == true)
             {
                 MessageBox.Show("Please fill all the fields.");
@@ -47,11 +49,12 @@ namespace Renamp
             else if (textBox1.Text == textBox2.Text)
             {
                 MessageBox.Show("Please change new project name.");
+                return;
             }
-            else if (textBox2.Text.Contains(" "))
+            else if (!regexItem.IsMatch(textBox2.Text))
             {
-                MessageBox.Show("New project name can't contain spaces, please try again.");
-
+                MessageBox.Show("New project name can't contain spaces or special characters, please try again.");
+                return;
             }
 
             String newName = textBox2.Text;
