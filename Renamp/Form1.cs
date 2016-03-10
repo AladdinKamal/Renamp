@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 
@@ -40,7 +34,7 @@ namespace Renamp
         private void button1_Click(object sender, EventArgs e)
         {
 
-            var regexItem = new Regex(@"~!@#$%^&*()+=/\""|,.?><");
+            var regexItem = new Regex("~!@#$%^&*()+=/|,.?><");
             if (textBox1.Text.Trim() == "" || textBox2.Text.Trim() == "" || textBox3.Text.Trim() == "" && checkBox1.Checked == true)
             {
                 MessageBox.Show("Please fill all the fields.");
@@ -51,7 +45,7 @@ namespace Renamp
                 MessageBox.Show("Please change new project name.");
                 return;
             }
-            else if (!regexItem.IsMatch(textBox2.Text))
+            else if (regexItem.IsMatch(textBox2.Text) || textBox2.Text.Contains(' ') || textBox2.Text.Contains('"') || textBox2.Text.Contains('/'))
             {
                 MessageBox.Show("New project name can't contain spaces or special characters, please try again.");
                 return;
@@ -102,7 +96,15 @@ namespace Renamp
                 SearchOption.AllDirectories))
                 File.Copy(newPath1, newPath1.Replace(oldPath, Backup), true);
 
-            Directory.Move(oldPath, newPath);
+            try
+            {
+                Directory.Move(oldPath, newPath);
+            }
+            catch (Exception error)
+            {
+                MessageBox.Show("Please close all directories first.");
+                return;
+            }
 
             System.IO.File.Move(newPath + oldName1 + ".sln", newPath + newName + ".sln");
 
@@ -139,7 +141,9 @@ namespace Renamp
                 fileEditor(c, oldName1, newName, oldName2);
             }
 
-            DialogResult result = MessageBox.Show("Project name has been successfully changed.\nDo you want to change another project name ?", "SUCCESS!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            newPath = @"C:\Users\" + Environment.UserName + @"\Documents\Visual Studio 2015\Projects\";
+            Backup = newPath + @"Renamp Backup\";
+            DialogResult result = MessageBox.Show("Project name has been successfully changed.\nThe new project exists in ' " + newPath + " '\n" + "A backup was created in ' " + Backup + " '\n" + "Do you want to change another project name ?", "SUCCESS!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
             if (result == DialogResult.No)
             {
                 Application.Exit();
@@ -158,6 +162,7 @@ namespace Renamp
                 this.ClientSize = new System.Drawing.Size(395, 180);
                 button1.Location = new System.Drawing.Point(200, 140);
                 textBox3.Visible = true;
+                button2.Visible = true;
             }
             else
             {
@@ -165,9 +170,10 @@ namespace Renamp
                 button1.Location = new System.Drawing.Point(200, 110);
                 textBox3.Visible = false;
                 textBox3.Text = "";
-
+                button2.Visible = false;
             }
         }
+
         public static void DeleteDirectory(string target_dir)
         {
             string[] files = Directory.GetFiles(target_dir);
@@ -198,6 +204,14 @@ namespace Renamp
             StreamWriter writer = new StreamWriter(path);
             writer.Write(input);
             writer.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            DialogResult folderBrowserDialog = folderBrowserDialog1.ShowDialog();
+
+            if (folderBrowserDialog == DialogResult.OK)
+                textBox3.Text = folderBrowserDialog1.SelectedPath;
         }
     }
 }
