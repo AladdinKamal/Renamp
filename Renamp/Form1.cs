@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Renamp
 {
@@ -20,7 +21,7 @@ namespace Renamp
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("-This application changes any c# project's name.. including all  properties and namespace.\n\n" + "-The default projects' directory is\n" + @"   ' C:\Users\XXX\Documents\Visual Studio 2015\Projects\ '" + "\n-The new project's name can only contain letters, numbers, - and _. \n\n -Please close all directories before renaming.", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("-This application changes any C# project's name.. including all  properties and namespace.\n\n" + "-The default projects' directory is\n" + @"   ' C:\Users\XXX\Documents\Visual Studio 2015\Projects\ '" + "\n-The new project's name can only contain letters, numbers, - and _. \n\n -Please close all directories before renaming.", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void textBox2_KeyPress(object sender, KeyPressEventArgs e)
@@ -33,7 +34,6 @@ namespace Renamp
 
         private void button1_Click(object sender, EventArgs e)
         {
-
             var regexItem = new Regex("~!@#$%^&*()+=/|,.?><");
             if (textBox1.Text.Trim() == "" || textBox2.Text.Trim() == "" || textBox3.Text.Trim() == "" && checkBox1.Checked == true)
             {
@@ -47,10 +47,11 @@ namespace Renamp
             }
             else if (regexItem.IsMatch(textBox2.Text) || textBox2.Text.Contains(' ') || textBox2.Text.Contains('"') || textBox2.Text.Contains('/'))
             {
-                MessageBox.Show("New project name can't contain spaces or special characters, please try again.");
+                MessageBox.Show("New project name can't contain spaces or special characters,\nonly letters, numbers, dashes '-' and underscores '_' are allowed.\nPlease try again..");
                 return;
             }
 
+            List<String> files = new List<String>();
             String newName = textBox2.Text;
             String oldName1 = textBox1.Text;
             String oldName2 = "";
@@ -88,60 +89,57 @@ namespace Renamp
                 }
             }
 
-            foreach (string dirPath in Directory.GetDirectories(oldPath, "*",
-                SearchOption.AllDirectories))
-                Directory.CreateDirectory(dirPath.Replace(oldPath, Backup));
-
-            foreach (string newPath1 in Directory.GetFiles(oldPath, "*.*",
-                SearchOption.AllDirectories))
-                File.Copy(newPath1, newPath1.Replace(oldPath, Backup), true);
+            if (Directory.Exists(newPath))
+            {
+                MessageBox.Show("Please change new project name.");
+                return;
+            }
+            else if (Directory.Exists(Backup))
+            {
+                DialogResult error = MessageBox.Show("A backup already exists for this project, would you like to overwrite it ?", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                if (error == DialogResult.Yes)
+                    Directory.Delete(Backup);
+                else
+                    return;
+            }
 
             try
             {
-                Directory.Move(oldPath, newPath);
+                foreach (String dirPath in Directory.GetDirectories(oldPath, "*", SearchOption.AllDirectories))
+                    Directory.CreateDirectory(dirPath.Replace(oldPath, Backup));
+                foreach (String filePath in Directory.GetFiles(oldPath, "*.*", SearchOption.AllDirectories))
+                    File.Copy(filePath, filePath.Replace(oldPath, Backup), true);
             }
             catch (Exception error)
             {
-                MessageBox.Show("Please close all directories first.");
+                MessageBox.Show("Please close all directories and any open projects.");
                 return;
             }
 
-            System.IO.File.Move(newPath + oldName1 + ".sln", newPath + newName + ".sln");
-
-            fileEditor(newPath + newName + ".sln", oldName1, newName, oldName2);
-
-            oldPath = newPath + oldName1 + @"\";
-            newPath += newName + @"\";
             Directory.Move(oldPath, newPath);
+            Directory.Move(newPath + oldName1 + @"\", newPath + newName + @"\");
 
-            if (Directory.Exists(newPath + @"bin\"))
-                DeleteDirectory(newPath + @"bin\");
-            if (Directory.Exists(newPath + @"obj\"))
-                DeleteDirectory(newPath + @"obj\");
+            if (Directory.Exists(newPath + newName + @"\bin"))
+                DeleteDirectory(newPath + newName + @"\bin");
+            if (Directory.Exists(newPath + newName + @"\obj"))
+                DeleteDirectory(newPath + newName + @"\obj");
 
-            System.IO.File.Move(newPath + oldName1 + ".csproj", newPath + newName + ".csproj");
-            fileEditor(newPath + newName + ".csproj", oldName1, newName, oldName2);
+            System.IO.File.Move(newPath + oldName1 + ".sln", newPath + newName + ".sln");
+            System.IO.File.Move(newPath + newName + @"\" + oldName1 + ".csproj", newPath + newName + @"\" + newName + ".csproj");
 
-            String[] files = System.IO.Directory.GetFiles(newPath, "*.cs");
-            foreach (String c in files)
-            {
-                fileEditor(c, oldName1, newName, oldName2);
-            }
-            files = System.IO.Directory.GetFiles(newPath, "*.xaml");
-            foreach (String c in files)
-            {
-                fileEditor(c, oldName1, newName, oldName2);
-            }
+            files.Add(newPath + newName + ".sln");
+            files.Add(newPath + newName + @"\" + newName + ".csproj");
+            addFiles(files, newPath, "*.appxmanifest");
+            addFiles(files, newPath, "*.cs");
+            addFiles(files, newPath, "*.xaml");
 
-            newPath = newPath + @"Properties\";
-            files = System.IO.Directory.GetFiles(newPath, "*.cs");
+            foreach (String f in files)
+                fileEditor(f, oldName1, newName, oldName2);
 
-            foreach (String c in files)
-            {
-                fileEditor(c, oldName1, newName, oldName2);
-            }
-
-            newPath = @"C:\Users\" + Environment.UserName + @"\Documents\Visual Studio 2015\Projects\";
+            if (textBox3.Text != "")
+                newPath = textBox3.Text;
+            else
+                newPath = @"C:\Users\" + Environment.UserName + @"\Documents\Visual Studio 2015\Projects\";
             Backup = newPath + @"Renamp Backup\";
             DialogResult result = MessageBox.Show("Project name has been successfully changed.\nThe new project exists in ' " + newPath + " '\n" + "A backup was created in ' " + Backup + " '\n" + "Do you want to change another project name ?", "SUCCESS!!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
             if (result == DialogResult.No)
@@ -152,6 +150,8 @@ namespace Renamp
             {
                 textBox1.Text = "";
                 textBox2.Text = "";
+                checkBox1.Checked = false;
+                files.Clear();
             }
         }
 
@@ -212,6 +212,25 @@ namespace Renamp
 
             if (folderBrowserDialog == DialogResult.OK)
                 textBox3.Text = folderBrowserDialog1.SelectedPath;
+        }
+
+        void addFiles(List<String> files, String Path, String extension)
+        {
+            try
+            {
+                foreach (String d in Directory.GetDirectories(Path))
+                {
+                    foreach (string f in Directory.GetFiles(d, extension))
+                    {
+                        files.Add(f);
+                    }
+                    addFiles(files, d, extension);
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine(excpt.Message);
+            }
         }
     }
 }
